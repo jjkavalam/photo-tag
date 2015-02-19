@@ -3,6 +3,7 @@
 <script class="removable" src="jquery.js"></script>
 <script class="removable">
     $(document).ready(function(){
+        $(".tf_pframe").css('height','500px');        
         $(".tf_pframe").on('click',function(event){
         
             if (this.count == undefined){
@@ -48,17 +49,41 @@
         function pf_loadImg(){
             var path = prompt("Path to the image file (ex. kky_1910.jpg).");
             if (path == undefined || path.length == 0) return;
+            $("img").one("load", function() {
+              resizeWidthOfFrame();
+            })                        
             $(".tf_photo").attr('src',path);
             $("#button_load_img").attr('value','Loaded image: '+path);
             $("#button_load_img").attr('disabled','true');
+            $(".step1").removeClass("redstep").addClass("greenstep");
+            // calculate the image width and set the frame width and height accordingly
+            // load event should fire
         }
-        function pf_setSelectionArea(){
+        function resizeWidthOfFrame(){
+            var photoRect = ($('.tf_photo')[0]).getBoundingClientRect();
+            $(".tf_pframe").css('width',photoRect.width+'px');        
+            $("#tf_photo_message_box").css('width',photoRect.width+'px');
+        }
+        function pf_finalizeSizes(){
+            // set selection area
             var size = ($("#select_area")[0]).value;           
             if (size == 0) return;
         
             $(".tf_marker_dummy").remove();        
             $("#button_selection_area").attr('disabled','true');
-            $("#select_area").attr('disabled','true');            
+            // 
+            $("#button_set_height").attr('disabled','true');            
+            $("#select_area").attr('disabled','true');  
+            $(".step2").removeClass("redstep").addClass("greenstep");            
+        }
+        function pf_setFrameHeight(){
+            var height = prompt("Height in pixels. (Ex: 1000)");
+            if (height == undefined || height.length == 0) return;
+            $('.tf_pframe').css('width','auto');
+            $('.tf_pframe').css('height',height+'px');
+            // revise the width also
+            resizeWidthOfFrame();
+            $("#button_set_height").attr('value','Height :'+height+'px');
         }
         function pf_selectionAreaNew(){
             var size = ($("#select_area")[0]).value;           
@@ -91,29 +116,49 @@
             var id = 'tf_marker-'+num;
             $('#'+id).remove();
         }
-    </script>
+        function tf_cleanup(){
+            $('.removable').remove();
+            $(".step4").removeClass("redstep").addClass("greenstep");
+        }
+    </script>    
     <h2>Instructions</h2>
+    <style>
+        .redstep {color: red;}
+        .greenstep {color: green;}
+    </style>
     <ul>
-        <li>Step 1: <input id="button_load_img" type="button" value="Enter file name of image" onclick="pf_loadImg()"/></li>    
-        <li>Step 2: 
-            <select id="select_area" onchange="pf_selectionAreaNew()";>
-                <option value="0">Pick a suitable size for the mouseover rectangle.</option>
+        <li class="redstep step1">Step 1: <input id="button_load_img" type="button" value="Enter file name of image" onclick="pf_loadImg()"/></li>    
+        <br/>
+        <li class="redstep step2">
+            Step 2: Adjust sizes of the photo, selection box.<br/>
+            Height of the photo:&nbsp;<input id="button_set_height" type="button" value="Height: 500px" onclick="pf_setFrameHeight()"/><br/>
+            Height of selection box:&nbsp;<select id="select_area" onchange="pf_selectionAreaNew()";>
+                <option value="0">%</option>
                 <option value="5">5%</option>
-                <option value="10">7%</option>
-                <option value="10">10%</option>
-                <option value="15">12%</option>
-                <option value="20">15%</option>                
-            </select>        
-            <input id="button_selection_area" type="button" value="I am happy with this size" onclick="pf_setSelectionArea()"/>
+                <option value="6">6%</option>                
+                <option value="7">7%</option>
+                <option value="8">8%</option>
+                <option value="9">9%</option>
+                <option value="10">10%</option>                
+                <option value="12">12%</option>
+                <option value="15">15%</option>
+            </select> (Look to the image area below for a sample selection box)
+            <br/>
+            <input id="button_selection_area" type="button" value="Finalize sizes" onclick="pf_finalizeSizes()"/>            
         </li>
-        <li>Step 3: Place markers by clicking on the image. Enter the message to be shown in the prompt that appears. Use undo button to remove previously added markers.</li>
-        <li>Step 4: When all markers are placed. <input type="button" value="Cleanup page before saving" onclick="$('.removable').remove();"/></li>
-        <li>Step 5: In the browsers menu goto File -> Save. Done.</li>
+        <br/>
+        <li class="step3">Step 3: Place markers by clicking on the image. Enter the message to be shown in the prompt that appears. 
+        <br/>If needed, use <input type="button" value="Undo" onclick="pf_Undo()"/> button to remove previously added markers.</li>
+        <br/>
+        <li class="redstep step4">Step 4: When done with placing markers, <input type="button" value="Cleanup page before saving" onclick="tf_cleanup()"/></li>
+        <li class="redstep step5">Step 5: Finally, save the work by going to browser's File Menu -- Save command.</li>
     </ul>
     
-    <br/>
-    <input type="button" value="Undo" onclick="pf_Undo()"/>
+    <br/>    
     <style class="removable">
+    .tf_pframe {
+        cursor: crosshair;
+    }
     .tf_marker{
         border: 2px solid red;
     }
@@ -125,17 +170,21 @@
     <style>
         .tf_pframe{           
             position: relative;             
-            text-align: center;            
+            text-align: center;
             border: 1px solid lightgray;
+            /*width: 1000px;*/
+            /*height: 500px;*/
         }
         .tf_pframe img{
-            height: 500px; 
+            height: 100%; 
         }        
         .tf_marker{
             position: absolute;
+            cursor: hand;
         }
         #tf_photo_message_box{
             position: relative;
+            /*width: 500px;*/
             height: 50px;
             font-size: 1em;
             text-align: center;
@@ -156,7 +205,7 @@
         <img class="tf_photo" />        
     </div>   
     <br/>
-    <div id="tf_photo_message_box"></div>    
+    <div id="tf_photo_message_box">Place cursor over the faces to know more.</div>    
 </div>
 
 </body>
