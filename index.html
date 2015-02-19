@@ -2,16 +2,12 @@
 <head>
 <script class="removable" src="jquery.js"></script>
 <script class="removable">
+    var id_prefix;
+
     $(document).ready(function(){
         $(".tf_pframe").css('height','500px');        
         $(".tf_pframe").on('click',function(event){
-        
-            if (this.count == undefined){
-                this.count = 0;
-            }
-            
-            this.count++;
-            
+                    
             var x = event.clientX;
             var y = event.clientY;
             var photoRect = ($('.tf_pframe')[0]).getBoundingClientRect();
@@ -22,8 +18,7 @@
             var mWp = boxheight*aspectr;
             var mHp = boxheight;
             
-            var id = 'tf_marker-'+this.count;            
-            var name = prompt('Who is this ?');
+            var id = id_prefix+'tf_marker-'+($(".tf_marker").length+1);            
             
             $(".tf_pframe").append(
                 $("<div/>")
@@ -33,22 +28,35 @@
                 .css('width',mWp+'%')
                 .css('height',mHp+'%')
                 .attr('id',id)
-                .attr('onmouseover','pf_showDetails("'+id+'")')
-                .attr('onmouseout','pf_mouseOut()')
-                .attr('data-message',name)
+                .attr('onmouseover','pf_showDetails("'+id+'",event)')
+                .attr('onmouseout','pf_mouseOut("'+id+'")')                
             );            
+            
+            var name = prompt('Who is this ?');            
+            $("#"+id).attr('data-message',name);
+            
         });
                 
     });
 </script>
 </head>
-<body>
+<body style="margin: 100px">
 
 <div class="removable">
-    <script>
+    <script>        
         function pf_loadImg(){
             var path = prompt("Path to the image file (ex. kky_1910.jpg).");
             if (path == undefined || path.length == 0) return;
+            
+            // remove all special characters
+            
+            var path_ = path.replace(/[^a-zA-Z0-9_-]/g,'');
+            
+            if (path_.search("___")!= -1){
+                alert("The filename cannot contain three consecutive underscores '___'");
+                return;
+            }            
+            
             $("img").one("load", function() {
               resizeWidthOfFrame();
             })                        
@@ -56,13 +64,21 @@
             $("#button_load_img").attr('value','Loaded image: '+path);
             $("#button_load_img").attr('disabled','true');
             $(".step1").removeClass("redstep").addClass("greenstep");
+
+            id_prefix = path_+"___";
+            // assign ids 
+            // tf_pframe, tf_photo_message_box_floating, tf_photo_message_box
+            $(".tf_pframe").attr('id',id_prefix+"tf_pframe");
+            $(".tf_photo_message_box_floating").attr('id',id_prefix+"tf_photo_message_box_floating");
+            $(".tf_photo_message_box").attr('id',id_prefix+"tf_photo_message_box");
+
             // calculate the image width and set the frame width and height accordingly
             // load event should fire
         }
         function resizeWidthOfFrame(){
             var photoRect = ($('.tf_photo')[0]).getBoundingClientRect();
             $(".tf_pframe").css('width',photoRect.width+'px');        
-            $("#tf_photo_message_box").css('width',photoRect.width+'px');
+            $("#"+id_prefix+"tf_photo_message_box").css('width',photoRect.width+'px');
         }
         function pf_finalizeSizes(){
             // set selection area
@@ -113,7 +129,7 @@
         function pf_Undo(){
             var num = $('.tf_marker').length;
             if (num == 0) return;
-            var id = 'tf_marker-'+num;
+            var id = id_prefix+'tf_marker-'+num;
             $('#'+id).remove();
         }
         function tf_cleanup(){
@@ -182,30 +198,57 @@
             position: absolute;
             cursor: hand;
         }
-        #tf_photo_message_box{
+        .tf_photo_message_box{
             position: relative;
             /*width: 500px;*/
             height: 50px;
             font-size: 1em;
             text-align: center;
         }
+        .tf_photo_message_box_floating{
+            position: absolute;
+            visibility: hidden;
+            width: 150px;
+            height: 50px;
+            background: khaki;
+            border-radius: 5px;
+        }
     </style>
     <script>
-        function pf_mouseOut(){
-            document.getElementById('tf_photo_message_box').innerHTML = "Place cursor over the faces to know more.";
+        function pf_mouseOut(markerId){
+            // extract id prefix
+            var prefix = markerId.replace(/___.*/,'')+"___";
+            
+            var floatingbox = document.getElementById(prefix+'tf_photo_message_box_floating');
+            floatingbox.style.visibility = "hidden";
+            document.getElementById(prefix+'tf_photo_message_box').innerHTML = "Place cursor over the faces to know more.";            
         }
-        function pf_showDetails(markerId){
-            var elem = document.getElementById(markerId);
+        
+        function pf_showDetails(markerId, event){
+        
+            var prefix = markerId.replace(/___.*/,'')+"___";
+            var c_rect = document.getElementById(prefix+"tf_pframe").getBoundingClientRect();
+            var elem = document.getElementById(markerId);            
+            var rect = elem.getBoundingClientRect();
             var message = elem.getAttribute('data-message');
-            document.getElementById('tf_photo_message_box').innerHTML = message;
+            
+            document.getElementById(prefix+'tf_photo_message_box').innerHTML = message;
+            
+            var floatingbox = document.getElementById(prefix+'tf_photo_message_box_floating');
+            floatingbox.innerHTML = message;           
+            floatingbox.style.visibility = "visible";
+            floatingbox.style.left = (rect.left-c_rect.left+rect.width+10)+"px";
+            floatingbox.style.top = (rect.top-c_rect.top-10)+"px";
+            
         }
     </script>
     <br/>
     <div class="tf_pframe">
-        <img class="tf_photo" />        
+        <img class="tf_photo" />
+        <div class="tf_photo_message_box_floating">Place cursor over the faces to know more.</div>            
     </div>   
     <br/>
-    <div id="tf_photo_message_box">Place cursor over the faces to know more.</div>    
+    <div class="tf_photo_message_box">Place cursor over the faces to know more.</div>
 </div>
 
 </body>
