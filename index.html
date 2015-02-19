@@ -1,0 +1,163 @@
+<html>
+<head>
+<script class="removable" src="jquery.js"></script>
+<script class="removable">
+    $(document).ready(function(){
+        $(".tf_pframe").on('click',function(event){
+        
+            if (this.count == undefined){
+                this.count = 0;
+            }
+            
+            this.count++;
+            
+            var x = event.clientX;
+            var y = event.clientY;
+            var photoRect = ($('.tf_pframe')[0]).getBoundingClientRect();
+            var xp = (x - photoRect.left)*100.0/(photoRect.width);
+            var yp = (y - photoRect.top)*100.0/(photoRect.height);
+            var aspectr = photoRect.height * 1.0 / photoRect.width;
+            var boxheight = ($("#select_area")[0]).value;
+            var mWp = boxheight*aspectr;
+            var mHp = boxheight;
+            
+            var id = 'tf_marker-'+this.count;            
+            var name = prompt('Who is this ?');
+            
+            $(".tf_pframe").append(
+                $("<div/>")
+                .addClass("tf_marker")
+                .css('left',(xp-0.5*mWp)+'%')
+                .css('top',(yp-0.5*mHp)+'%')
+                .css('width',mWp+'%')
+                .css('height',mHp+'%')
+                .attr('id',id)
+                .attr('onmouseover','pf_showDetails("'+id+'")')
+                .attr('onmouseout','pf_mouseOut()')
+                .attr('data-message',name)
+            );            
+        });
+                
+    });
+</script>
+</head>
+<body>
+
+<div class="removable">
+    <script>
+        function pf_loadImg(){
+            var path = prompt("Path to the image file (ex. kky_1910.jpg).");
+            if (path == undefined || path.length == 0) return;
+            $(".tf_photo").attr('src',path);
+            $("#button_load_img").attr('value','Loaded image: '+path);
+            $("#button_load_img").attr('disabled','true');
+        }
+        function pf_setSelectionArea(){
+            var size = ($("#select_area")[0]).value;           
+            if (size == 0) return;
+        
+            $(".tf_marker_dummy").remove();        
+            $("#button_selection_area").attr('disabled','true');
+            $("#select_area").attr('disabled','true');            
+        }
+        function pf_selectionAreaNew(){
+            var size = ($("#select_area")[0]).value;           
+            if (size == 0) return;
+
+            var photoRect = ($('.tf_pframe')[0]).getBoundingClientRect();
+            var xp = 50;
+            var yp = 50;
+            var aspectr = photoRect.height * 1.0 / photoRect.width;
+            var boxheight = size;
+            var mWp = boxheight*aspectr;
+            var mHp = boxheight;
+                        
+            $(".tf_marker_dummy").remove();
+            $(".tf_pframe").append(
+                $("<div/>")
+                .addClass("tf_marker")
+                .addClass("tf_marker_dummy")
+                .addClass("removable")
+                .css('left',(xp-0.5*mWp)+'%')
+                .css('top',(yp-0.5*mHp)+'%')
+                .css('width',mWp+'%')
+                .css('height',mHp+'%')
+            );            
+            
+        }
+        function pf_Undo(){
+            var num = $('.tf_marker').length;
+            if (num == 0) return;
+            var id = 'tf_marker-'+num;
+            $('#'+id).remove();
+        }
+    </script>
+    <h2>Instructions</h2>
+    <ul>
+        <li>Step 1: <input id="button_load_img" type="button" value="Enter file name of image" onclick="pf_loadImg()"/></li>    
+        <li>Step 2: 
+            <select id="select_area" onchange="pf_selectionAreaNew()";>
+                <option value="0">Pick a suitable size for the mouseover rectangle.</option>
+                <option value="5">5%</option>
+                <option value="10">7%</option>
+                <option value="10">10%</option>
+                <option value="15">12%</option>
+                <option value="20">15%</option>                
+            </select>        
+            <input id="button_selection_area" type="button" value="I am happy with this size" onclick="pf_setSelectionArea()"/>
+        </li>
+        <li>Step 3: Place markers by clicking on the image. Enter the message to be shown in the prompt that appears. Use undo button to remove previously added markers.</li>
+        <li>Step 4: When all markers are placed. <input type="button" value="Cleanup page before saving" onclick="$('.removable').remove();"/></li>
+        <li>Step 5: In the browsers menu goto File -> Save. Done.</li>
+    </ul>
+    
+    <br/>
+    <input type="button" value="Undo" onclick="pf_Undo()"/>
+    <style class="removable">
+    .tf_marker{
+        border: 2px solid red;
+    }
+    </style>
+    <hr/>
+</div>
+
+<div>
+    <style>
+        .tf_pframe{           
+            position: relative;             
+            text-align: center;            
+            border: 1px solid lightgray;
+        }
+        .tf_pframe img{
+            height: 500px; 
+        }        
+        .tf_marker{
+            position: absolute;
+        }
+        #tf_photo_message_box{
+            position: relative;
+            height: 50px;
+            font-size: 1em;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function pf_mouseOut(){
+            document.getElementById('tf_photo_message_box').innerHTML = "Place cursor over the faces to know more.";
+        }
+        function pf_showDetails(markerId){
+            var elem = document.getElementById(markerId);
+            var message = elem.getAttribute('data-message');
+            document.getElementById('tf_photo_message_box').innerHTML = message;
+        }
+    </script>
+    <br/>
+    <div class="tf_pframe">
+        <img class="tf_photo" />        
+    </div>   
+    <br/>
+    <div id="tf_photo_message_box"></div>    
+</div>
+
+</body>
+</html>
